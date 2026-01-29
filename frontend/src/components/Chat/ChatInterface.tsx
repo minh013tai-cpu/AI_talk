@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useChat } from '../../hooks/useChat'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
