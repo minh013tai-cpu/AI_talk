@@ -1,0 +1,145 @@
+.memory-view {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.memory-header {
+  margin-bottom: 2rem;
+}
+
+.memory-header h2 {
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.memory-subtitle {
+  color: #666;
+}
+
+.memory-filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.memory-filters button {
+  padding: 0.5rem 1rem;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.memory-filters button:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.memory-filters button.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 12px;
+  color: #666;
+}
+
+.empty-hint {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.memories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.memory-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.memory-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.memory-header-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.memory-category {
+  background: #f0f4ff;
+  color: #667eea;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+}
+
+.memory-importance {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.memory-content {
+  line-height: 1.6;
+  color: #333;
+  flex: 1;
+}
+
+.memory-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.memory-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.delete-button {
+  padding: 0.5rem 1rem;
+  background: #fee;
+  color: #c33;
+  border: 1px solid #fcc;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.delete-button:hover {
+  background: #fcc;
+  border-color: #c33;
+}
+
+@media (max-width: 768px) {
+  .memories-grid {
+    grid-template-columns: 1fr;
+  }
+}
