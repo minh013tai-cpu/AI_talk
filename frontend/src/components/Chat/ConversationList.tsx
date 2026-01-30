@@ -147,17 +147,19 @@ const ConversationList = ({
                 <button
                   type="button"
                   className="conversation-item-menu-btn"
-                  aria-label="Menu"
+                  aria-label="Tùy chọn"
+                  aria-haspopup="menu"
                   aria-expanded={openMenuId === conv.conversation_id}
-                  onClick={(e) => {
+                  onMouseDown={(e) => {
+                    e.preventDefault()
                     e.stopPropagation()
-                    setOpenMenuId(openMenuId === conv.conversation_id ? null : conv.conversation_id)
+                    setOpenMenuId((prev) => (prev === conv.conversation_id ? null : conv.conversation_id))
                   }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="6" r="1.5" />
-                    <circle cx="12" cy="12" r="1.5" />
-                    <circle cx="12" cy="18" r="1.5" />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <circle cx="12" cy="5" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="12" cy="19" r="2" />
                   </svg>
                 </button>
                 {openMenuId === conv.conversation_id && (

@@ -16,4 +16,5 @@ After adding or changing environment variables on Vercel, **redeploy** the proje
 
 1. Copy `.env.example` to `.env` and fill in the same variables.
 2. Run the schema in Supabase SQL Editor: see `supabase_schema.sql`.
-3. Start the app: `uvicorn app.main:app --reload` (or use `run.py`).
+3. **For pin/delete conversations:** If you already have the base schema, run `supabase_migration_pinned.sql` in Supabase SQL Editor. (Without this, the app still loads but pin/delete will not work.)
+4. Start the app: `uvicorn app.main:app --reload` (or use `run.py`).

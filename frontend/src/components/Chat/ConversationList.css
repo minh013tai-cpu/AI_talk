@@ -152,15 +152,15 @@
 
 .conversation-dropdown {
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   right: 0;
-  margin-top: 4px;
+  margin-bottom: 4px;
   min-width: 160px;
   background: #fff;
   border: 1px solid #dadce0;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-  z-index: 100;
+  z-index: 1000;
   overflow: hidden;
 }
 

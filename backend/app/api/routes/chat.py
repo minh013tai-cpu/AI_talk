@@ -168,12 +168,16 @@ async def get_conversations(user_id: str):
         if not result.data:
             return []
         
-        # Fetch pinned conversations for this user
-        pinned_result = supabase.table("pinned_conversations")\
-            .select("conversation_id")\
-            .eq("user_id", user_id)\
-            .execute()
-        pinned_ids = {r["conversation_id"] for r in (pinned_result.data or [])}
+        # Fetch pinned conversations (skip if table not yet created - e.g. migration not run)
+        pinned_ids = set()
+        try:
+            pinned_result = supabase.table("pinned_conversations")\
+                .select("conversation_id")\
+                .eq("user_id", user_id)\
+                .execute()
+            pinned_ids = {r["conversation_id"] for r in (pinned_result.data or [])}
+        except Exception as pin_err:
+            logger.warning("pinned_conversations table not found or error: %s - run supabase_migration_pinned.sql", pin_err)
         
         conversations_dict = {}
         for conv in result.data:
@@ -236,12 +240,15 @@ async def delete_conversation(user_id: str, conversation_id: str):
             for row_id in ids_to_delete:
                 supabase.table("conversations").delete().eq("id", row_id).execute()
         
-        # Remove from pinned_conversations if present
-        supabase.table("pinned_conversations")\
-            .delete()\
-            .eq("user_id", user_id)\
-            .eq("conversation_id", conversation_id)\
-            .execute()
+        # Remove from pinned_conversations if present (ignore if table not yet created)
+        try:
+            supabase.table("pinned_conversations")\
+                .delete()\
+                .eq("user_id", user_id)\
+                .eq("conversation_id", conversation_id)\
+                .execute()
+        except Exception:
+            pass
         
         return {"ok": True, "deleted": len(ids_to_delete)}
     except Exception as e:
