@@ -11,8 +11,12 @@ const MessageList = ({ messages, isLoading }: MessageListProps) => {
     <div className="message-list">
       {messages.length === 0 && !isLoading && (
         <div className="empty-state">
-          <p>Start a conversation with Tymon!</p>
-          <p className="empty-hint">Tymon can remember important details, ask clarifying questions, and have thoughtful conversations.</p>
+          <div className="empty-state-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" />
+            </svg>
+          </div>
+          <p className="empty-state-greeting">Xin chào! Chúng ta nên bắt đầu từ đâu nhỉ?</p>
         </div>
       )}
 
