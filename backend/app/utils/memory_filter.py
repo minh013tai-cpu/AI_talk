@@ -3,8 +3,20 @@ Memory filtering logic - determine what to keep and what to discard
 """
 
 from typing import List, Dict, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.models.memory import Memory
+
+
+def _ensure_aware(dt: datetime) -> datetime:
+    """Ensure datetime is timezone-aware (UTC). If naive, assume UTC."""
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def _now_utc() -> datetime:
+    """Return current time as timezone-aware UTC datetime."""
+    return datetime.now(timezone.utc)
 
 
 def clamp(value: float, min_value: float, max_value: float) -> float:
@@ -45,8 +57,8 @@ def compute_decay_score(
     stability: float = 0.5,
     now: Optional[datetime] = None
 ) -> float:
-    now = now or datetime.now()
-    last_accessed = last_accessed or now
+    now = _ensure_aware(now) if now else _now_utc()
+    last_accessed = _ensure_aware(last_accessed) if last_accessed else now
     days_since = max(0, (now - last_accessed).days)
     tier = get_memory_tier(importance_score)
     base_half_life = {"high": 180, "medium": 90, "low": 30}[tier]
@@ -67,8 +79,9 @@ def is_memory_expired(memory: Memory, now: Optional[datetime] = None) -> bool:
     if memory.is_pinned:
         return False
     if memory.ttl_days and memory.created_at:
-        now = now or datetime.now()
-        days_since = (now - memory.created_at).days
+        now = _ensure_aware(now) if now else _now_utc()
+        created_at = _ensure_aware(memory.created_at)
+        days_since = (now - created_at).days
         if days_since > memory.ttl_days:
             if memory.importance_score >= 0.8 and memory.access_count >= 5:
                 return False
@@ -106,19 +119,21 @@ def should_keep_memory(memory: Memory, days_since_creation: int, access_count: i
         if days_since_creation < 7 or access_count >= 3:
             return True
     
-    return False
+    # Default: keep all memories (don't filter out anything prematurely)
+    return True
 
 
 def filter_unimportant_memories(memories: List[Memory]) -> List[Memory]:
     """
     Filter out memories that are no longer relevant
     """
-    now = datetime.now()
+    now = _now_utc()
     filtered = []
     
     for memory in memories:
         if memory.created_at:
-            days_since = (now - memory.created_at).days
+            created_at = _ensure_aware(memory.created_at)
+            days_since = (now - created_at).days
         else:
             days_since = 0
         

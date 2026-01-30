@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from app.services.supabase_service import get_supabase_client
 from app.services.gemini_service import get_gemini_service
 from app.models.memory import Memory, MemoryCreate
@@ -10,7 +10,9 @@ from app.utils.memory_filter import (
     compute_ttl_days,
     compute_decay_score,
     is_memory_expired,
-    clamp
+    clamp,
+    _now_utc,
+    _ensure_aware
 )
 
 
@@ -67,7 +69,7 @@ class MemoryService:
             else:
                 ttl_days = max(7, min(ttl_days, 1825))
 
-            now = datetime.now()
+            now = _now_utc()
             decay_score = compute_decay_score(adjusted_importance, now, memory_type, stability, now)
             
             # Check if similar memory already exists
@@ -106,15 +108,16 @@ class MemoryService:
     
     def create_memory(self, memory_data: MemoryCreate) -> Memory:
         """Create a new memory"""
-        now = datetime.now().isoformat()
+        now = _now_utc().isoformat()
         decay_score = memory_data.decay_score
         if decay_score is None:
+            now_dt = _now_utc()
             decay_score = compute_decay_score(
                 memory_data.importance_score,
-                datetime.now(),
+                now_dt,
                 memory_data.memory_type or "fact",
                 0.5,
-                datetime.now()
+                now_dt
             )
         data = {
             "user_id": memory_data.user_id,
@@ -159,7 +162,7 @@ class MemoryService:
         if not result.data:
             return []
         
-        now = datetime.now()
+        now = _now_utc()
         memories = [Memory(**mem) for mem in result.data]
         
         # Filter by relevance (simple keyword matching)
@@ -248,18 +251,19 @@ class MemoryService:
         importance_score = result.data[0].get("importance_score", 0.5) if result.data else 0.5
         memory_type = result.data[0].get("memory_type", "fact") if result.data else "fact"
         last_accessed = result.data[0].get("last_accessed") if result.data else None
+        now = _now_utc()
         new_decay = compute_decay_score(
             importance_score,
             last_accessed,
             memory_type,
             0.5,
-            datetime.now()
+            now
         )
 
         self.supabase.table("memories")\
             .update({
-                "last_accessed": datetime.now().isoformat(),
-                "last_used_in_chat": datetime.now().isoformat(),
+                "last_accessed": now.isoformat(),
+                "last_used_in_chat": now.isoformat(),
                 "decay_score": new_decay,
                 "access_count": current_count + 1
             })\
@@ -285,7 +289,7 @@ class MemoryService:
         if not result.data:
             return
 
-        now = datetime.now()
+        now = _now_utc()
         memories = [Memory(**mem) for mem in result.data]
 
         expired_ids = [
@@ -354,7 +358,7 @@ class MemoryService:
         decay_score: float,
         source: str
     ) -> Dict[str, Any]:
-        now = datetime.now().isoformat()
+        now = _now_utc().isoformat()
         existing_importance = existing.get("importance_score", 0)
         existing_type = existing.get("memory_type")
         merged_type = existing_type or memory_type

@@ -20,7 +20,7 @@
 }
 
 .empty-state-icon {
-  color: #667eea;
+  color: var(--color-primary);
   margin-bottom: 1rem;
 }
 
@@ -88,7 +88,7 @@
 }
 
 .user-message .message-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   color: white;
   border-bottom-right-radius: 4px;
 }
@@ -120,7 +120,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #667eea;
+  background: var(--color-primary);
   animation: typing 1.4s infinite;
 }
 

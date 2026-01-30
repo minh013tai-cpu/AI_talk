@@ -31,12 +31,12 @@
 }
 
 .journal-tabs button:hover {
-  color: #667eea;
+  color: var(--color-primary);
 }
 
 .journal-tabs button.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -72,7 +72,7 @@
 
 .journal-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-primary);
 }
 
 .tags-input {
@@ -87,12 +87,12 @@
 
 .tags-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-primary);
 }
 
 .save-button {
   padding: 0.75rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -111,15 +111,35 @@
 }
 
 .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   color: #999;
-  padding: 2rem;
-  background: white;
-  border-radius: 8px;
+  padding: 3rem 2rem;
+  background: #fff;
+  border-radius: 12px;
+  gap: 0.5rem;
+}
+
+.empty-state-icon {
+  color: var(--color-primary);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-icon svg {
+  display: block;
+}
+
+.empty .empty-hint {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-top: 0;
 }
 
 .ai-journals-info {
-  background: #f0f4ff;
+  background: var(--color-primary-bg);
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1rem;
@@ -149,7 +169,7 @@
 .reflection-section h4,
 .learnings-section h4,
 .questions-section h4 {
-  color: #667eea;
+  color: var(--color-primary);
   margin-bottom: 0.5rem;
   font-size: 1.1rem;
 }
@@ -177,7 +197,7 @@
   content: "✓";
   position: absolute;
   left: 0;
-  color: #667eea;
+  color: var(--color-primary);
   font-weight: bold;
 }
 
@@ -185,6 +205,6 @@
   content: "?";
   position: absolute;
   left: 0;
-  color: #764ba2;
+  color: var(--color-primary-dark);
   font-weight: bold;
 }

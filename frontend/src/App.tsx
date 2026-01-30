@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Outlet, Link } from 'react-router-dom'
 import ChatInterface from './components/Chat/ChatInterface'
 import JournalView from './components/Journal/JournalView'
 import MemoryView from './components/Memory/MemoryView'
@@ -11,9 +11,9 @@ function AppLayout() {
       <header className="app-header">
         <h1>Tymon AI</h1>
         <nav>
-          <a href="/">Chat</a>
-          <a href="/journal">Journal</a>
-          <a href="/memory">Memories</a>
+          <Link to="/">Chat</Link>
+          <Link to="/journal">Journal</Link>
+          <Link to="/memory">Memories</Link>
         </nav>
       </header>
       <main className="app-main">

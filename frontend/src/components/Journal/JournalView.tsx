@@ -99,7 +99,15 @@ const JournalView = () => {
             {isLoading ? (
               <p>Loading...</p>
             ) : userJournals.length === 0 ? (
-              <p className="empty">No journal entries yet.</p>
+              <div className="empty">
+                <div className="empty-state-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" />
+                  </svg>
+                </div>
+                <p>No journal entries yet.</p>
+                <p className="empty-hint">Write your first entry above!</p>
+              </div>
             ) : (
               userJournals.map((journal) => (
                 <JournalEntry key={journal.id} journal={journal} type="user" />
@@ -117,7 +125,15 @@ const JournalView = () => {
           {isLoading ? (
             <p>Loading...</p>
           ) : aiJournals.length === 0 ? (
-            <p className="empty">No AI reflections yet. Start chatting to see Tymon's thoughts!</p>
+            <div className="empty">
+              <div className="empty-state-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" />
+                </svg>
+              </div>
+              <p>No AI reflections yet.</p>
+              <p className="empty-hint">Start chatting to see Tymon&apos;s thoughts!</p>
+            </div>
           ) : (
             aiJournals.map((journal) => (
               <div key={journal.id} className="ai-journal-entry">

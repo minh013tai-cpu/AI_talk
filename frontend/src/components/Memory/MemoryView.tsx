@@ -48,7 +48,7 @@ const MemoryView = () => {
   }
 
   const getImportanceColor = (score: number): string => {
-    if (score >= 0.7) return '#4caf50'
+    if (score >= 0.7) return 'var(--color-primary)'
     if (score >= 0.4) return '#ff9800'
     return '#999'
   }
@@ -100,6 +100,11 @@ const MemoryView = () => {
         <p>Loading memories...</p>
       ) : filteredMemories.length === 0 ? (
         <div className="empty-state">
+          <div className="empty-state-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" />
+            </svg>
+          </div>
           <p>No memories yet.</p>
           <p className="empty-hint">
             Start chatting with Tymon to build memories!

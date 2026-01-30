@@ -1,3 +1,10 @@
+:root {
+  --color-primary: #22c55e;
+  --color-primary-dark: #16a34a;
+  --gradient-primary: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  --color-primary-bg: #f0fdf4;
+}
+
 * {
   margin: 0;
   padding: 0;

@@ -33,7 +33,7 @@
 }
 
 .tag {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
