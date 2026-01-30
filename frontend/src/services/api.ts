@@ -10,6 +10,19 @@ const api = axios.create({
   },
 })
 
+// Log backend error detail when response is 5xx (so you see it in Console)
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status && err.response.status >= 500) {
+      const data = err.response?.data
+      const detail = data != null && typeof data === 'object' && 'detail' in data ? data.detail : data
+      console.error('[API 5xx]', err.config?.url, '-> Backend error detail:', detail ?? '(no body)')
+    }
+    return Promise.reject(err)
+  }
+)
+
 export interface ChatMessage {
   message: string
   user_id: string
