@@ -50,9 +50,15 @@ export interface Memory {
   content: string
   importance_score: number
   category: string
+  memory_type?: string
+  source?: string
   created_at: string
   last_accessed: string
   access_count: number
+  decay_score?: number
+  ttl_days?: number
+  last_used_in_chat?: string
+  is_pinned?: boolean
 }
 
 export interface UserJournal {
@@ -79,6 +85,16 @@ export interface ConversationSummary {
   last_message_time: string
   message_count: number
   pinned?: boolean
+}
+
+// Health check
+export const checkBackendHealth = async (): Promise<boolean> => {
+  try {
+    const response = await api.get<{ status: string }>('/health')
+    return response?.data?.status === 'healthy'
+  } catch {
+    return false
+  }
 }
 
 // Chat API

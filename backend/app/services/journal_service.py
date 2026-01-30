@@ -2,6 +2,7 @@ from typing import List, Optional
 from datetime import datetime
 from app.services.supabase_service import get_supabase_client
 from app.models.journal import UserJournal, UserJournalCreate, AIJournal, AIJournalCreate
+from app.services.memory_service import get_memory_service
 
 
 class JournalService:
@@ -20,7 +21,18 @@ class JournalService:
         
         result = self.supabase.table("user_journals").insert(data).execute()
         if result.data:
-            return UserJournal(**result.data[0])
+            journal = UserJournal(**result.data[0])
+            try:
+                memory_service = get_memory_service()
+                journal_text = f"User journal entry:\n{journal_data.content}"
+                memory_service.extract_and_store_memories(
+                    journal_data.user_id,
+                    journal_text,
+                    source="journal"
+                )
+            except Exception as e:
+                print(f"Error extracting memories from journal: {e}")
+            return journal
         raise Exception("Failed to create user journal")
     
     def get_user_journals(

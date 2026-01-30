@@ -42,6 +42,11 @@ const MemoryView = () => {
     return 'Low'
   }
 
+  const formatTTL = (ttl?: number): string => {
+    if (!ttl) return 'n/a'
+    return `${ttl}d`
+  }
+
   const getImportanceColor = (score: number): string => {
     if (score >= 0.7) return '#4caf50'
     if (score >= 0.4) return '#ff9800'
@@ -105,7 +110,13 @@ const MemoryView = () => {
           {filteredMemories.map((memory) => (
             <div key={memory.id} className="memory-card">
               <div className="memory-header-card">
-                <div className="memory-category">{memory.category}</div>
+                <div className="memory-badges">
+                  <div className="memory-category">{memory.category}</div>
+                  {memory.memory_type && (
+                    <div className="memory-type">{memory.memory_type}</div>
+                  )}
+                  {memory.is_pinned && <div className="memory-pinned">Pinned</div>}
+                </div>
                 <div
                   className="memory-importance"
                   style={{ color: getImportanceColor(memory.importance_score) }}
@@ -122,6 +133,11 @@ const MemoryView = () => {
                       Last: {new Date(memory.last_accessed).toLocaleDateString()}
                     </span>
                   )}
+                  <span>TTL: {formatTTL(memory.ttl_days)}</span>
+                  {typeof memory.decay_score === 'number' && (
+                    <span>Decay: {memory.decay_score.toFixed(2)}</span>
+                  )}
+                  {memory.source && <span>Source: {memory.source}</span>}
                 </div>
                 <button
                   className="delete-button"

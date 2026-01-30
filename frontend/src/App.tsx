@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom
 import ChatInterface from './components/Chat/ChatInterface'
 import JournalView from './components/Journal/JournalView'
 import MemoryView from './components/Memory/MemoryView'
+import BackendHealthBanner from './components/BackendHealthBanner'
 import './App.css'
 
 function AppLayout() {
@@ -25,6 +26,7 @@ function AppLayout() {
 function App() {
   return (
     <Router>
+      <BackendHealthBanner />
       <Routes>
         <Route path="/" element={<ChatInterface />} />
         <Route element={<AppLayout />}>

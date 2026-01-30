@@ -1,6 +1,18 @@
 import { useState, useCallback } from 'react'
 import { chatAPI, Conversation, ChatResponse } from '../services/api'
 
+const BACKEND_UNREACHABLE_MSG = 'Không kết nối được backend. Hãy chạy: cd backend && python run.py'
+
+const isNetworkError = (err: unknown): boolean =>
+  (err as { message?: string; code?: string })?.message === 'Network Error' ||
+  (err as { code?: string })?.code === 'ERR_NETWORK'
+
+const getErrorMessage = (err: unknown, fallback: string): string => {
+  if (isNetworkError(err)) return BACKEND_UNREACHABLE_MSG
+  const e = err as { response?: { data?: { detail?: string } }; message?: string }
+  return e?.response?.data?.detail || e?.message || fallback
+}
+
 interface UseChatReturn {
   messages: Conversation[]
   isLoading: boolean
@@ -58,8 +70,8 @@ export const useChat = (): UseChatReturn => {
       if (response.conversation_id) {
         setCurrentConversationId(response.conversation_id)
       }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to send message')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to send message'))
       console.error('Chat error:', err)
     } finally {
       setIsLoading(false)
@@ -94,8 +106,8 @@ export const useChat = (): UseChatReturn => {
       if (conversationId) {
         setCurrentConversationId(conversationId)
       }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to load history')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to load history'))
       console.error('Load history error:', err)
     } finally {
       setIsLoading(false)

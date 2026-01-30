@@ -28,7 +28,13 @@ CREATE TABLE IF NOT EXISTS memories (
     category TEXT NOT NULL DEFAULT 'other',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     last_accessed TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    access_count INTEGER DEFAULT 0
+    access_count INTEGER DEFAULT 0,
+    decay_score FLOAT NOT NULL DEFAULT 0.5 CHECK (decay_score >= 0 AND decay_score <= 1),
+    ttl_days INTEGER NOT NULL DEFAULT 180,
+    last_used_in_chat TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
+    memory_type TEXT NOT NULL DEFAULT 'fact',
+    source TEXT NOT NULL DEFAULT 'chat'
 );
 
 -- User journals table
@@ -65,6 +71,9 @@ CREATE INDEX IF NOT EXISTS idx_conversations_timestamp ON conversations(timestam
 CREATE INDEX IF NOT EXISTS idx_memories_user_id ON memories(user_id);
 CREATE INDEX IF NOT EXISTS idx_memories_importance ON memories(importance_score DESC);
 CREATE INDEX IF NOT EXISTS idx_memories_category ON memories(category);
+CREATE INDEX IF NOT EXISTS idx_memories_memory_type ON memories(memory_type);
+CREATE INDEX IF NOT EXISTS idx_memories_decay ON memories(decay_score DESC);
+CREATE INDEX IF NOT EXISTS idx_memories_last_used ON memories(last_used_in_chat DESC);
 CREATE INDEX IF NOT EXISTS idx_user_journals_user_id ON user_journals(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_journals_created_at ON user_journals(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_journals_user_id ON ai_journals(user_id);

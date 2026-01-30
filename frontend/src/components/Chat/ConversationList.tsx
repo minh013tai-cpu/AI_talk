@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { chatAPI, ConversationSummary } from '../../services/api'
 import './ConversationList.css'
@@ -151,7 +151,12 @@ const ConversationList = ({
               className={`conversation-item ${
                 currentConversationId === conv.conversation_id ? 'active' : ''
               }`}
-              onClick={() => onSelectConversation(conv.conversation_id)}
+              onClick={(e) => {
+                const t = e.target as HTMLElement
+                if (t.closest('[data-conversation-menu]')) return
+                if (t.closest('.conversation-item-title')) return
+                onSelectConversation(conv.conversation_id)
+              }}
             >
               {conv.pinned && (
                 <span className="conversation-item-pinned-icon" aria-hidden="true">
@@ -160,19 +165,44 @@ const ConversationList = ({
                   </svg>
                 </span>
               )}
-              <span className="conversation-item-title">{conv.first_message || 'Cuộc trò chuyện mới'}</span>
-              <div className="conversation-item-actions">
-                <button
-                  type="button"
-                  className="conversation-item-menu-btn"
-                  data-conversation-menu
-                  aria-label="Tùy chọn"
-                  aria-haspopup="menu"
-                  aria-expanded={openMenuId === conv.conversation_id}
-                  onClick={(e) => {
+              <span
+                className="conversation-item-title"
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSelectConversation(conv.conversation_id)
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && onSelectConversation(conv.conversation_id)}
+              >
+                {conv.first_message || 'Cuộc trò chuyện mới'}
+              </span>
+              <div
+                className="conversation-item-menu-zone"
+                data-conversation-menu
+                role="button"
+                tabIndex={0}
+                aria-label="Tùy chọn"
+                aria-haspopup="menu"
+                aria-expanded={openMenuId === conv.conversation_id}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                  if (openMenuId === conv.conversation_id) {
+                    setOpenMenuId(null)
+                    setMenuPosition(null)
+                  } else {
+                    setOpenMenuId(conv.conversation_id)
+                    setMenuPosition({ top: rect.top, left: rect.right + 4 })
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault()
                     e.stopPropagation()
-                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                    const el = e.currentTarget as HTMLElement
+                    const rect = el.getBoundingClientRect()
                     if (openMenuId === conv.conversation_id) {
                       setOpenMenuId(null)
                       setMenuPosition(null)
@@ -180,14 +210,14 @@ const ConversationList = ({
                       setOpenMenuId(conv.conversation_id)
                       setMenuPosition({ top: rect.top, left: rect.right + 4 })
                     }
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <circle cx="12" cy="5" r="2" />
-                    <circle cx="12" cy="12" r="2" />
-                    <circle cx="12" cy="19" r="2" />
-                  </svg>
-                </button>
+                  }
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <circle cx="12" cy="5" r="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <circle cx="12" cy="19" r="2" />
+                </svg>
               </div>
             </div>
           ))

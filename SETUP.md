@@ -2,6 +2,21 @@
 
 ## Quick Start
 
+### 0. Chạy toàn bộ (backend + frontend)
+
+Từ thư mục gốc dự án:
+
+```bash
+npm install
+npm run dev
+```
+
+Lệnh này sẽ chạy backend (port 8000) và frontend (port 5173) cùng lúc.
+
+Hoặc chạy riêng từng phần:
+- **Backend:** `npm run dev:backend` (hoặc `cd backend && python run.py`)
+- **Frontend:** `npm run dev:frontend` (hoặc `cd frontend && npm run dev`)
+
 ### 1. Database Setup (Supabase)
 
 1. Go to your Supabase project dashboard

@@ -129,32 +129,27 @@
   font-weight: 600;
 }
 
-.conversation-item-actions {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.conversation-item-menu-btn {
+.conversation-item-menu-zone {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 36px;
-  min-height: 36px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #5f6368;
+  min-width: 48px;
+  min-height: 44px;
+  padding: 0 8px;
+  flex-shrink: 0;
   cursor: pointer;
+  color: #5f6368;
   border-radius: 50%;
-  opacity: 0.8;
+  opacity: 0.85;
   transition: opacity 0.2s, background 0.2s;
+  touch-action: manipulation;
 }
 
-.conversation-item:hover .conversation-item-menu-btn {
+.conversation-item:hover .conversation-item-menu-zone {
   opacity: 1;
 }
 
-.conversation-item-menu-btn:hover {
+.conversation-item-menu-zone:hover {
   background: rgba(0, 0, 0, 0.08);
 }
 

@@ -175,13 +175,19 @@ For each important piece of information, provide:
 1. The memory content (what to remember)
 2. Importance score (0.0 to 1.0, where 1.0 is very important)
 3. Category (one of: personal_info, preference, fact, relationship, goal, other)
+4. Memory type (one of: fact, preference, goal, relationship, constraint)
+5. Stability score (0.0 to 1.0, where 1.0 means stable/long-term)
+6. TTL in days (optional; if unsure, omit or set to 0)
 
 Format as JSON array:
 [
   {{
     "content": "memory text",
     "importance_score": 0.8,
-    "category": "preference"
+    "category": "preference",
+    "memory_type": "preference",
+    "stability": 0.7,
+    "ttl_days": 180
   }}
 ]
 
