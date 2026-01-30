@@ -78,6 +78,7 @@ export interface ConversationSummary {
   first_message: string
   last_message_time: string
   message_count: number
+  pinned?: boolean
 }
 
 // Chat API
@@ -98,6 +99,18 @@ export const chatAPI = {
     const response = await api.get<ConversationSummary[]>(`/api/chat/conversations/${userId}`)
     const data = response.data
     return Array.isArray(data) ? data : []
+  },
+
+  deleteConversation: async (userId: string, conversationId: string): Promise<void> => {
+    await api.delete(`/api/chat/conversations/${userId}/${conversationId}`)
+  },
+
+  pinConversation: async (userId: string, conversationId: string): Promise<void> => {
+    await api.post(`/api/chat/conversations/${userId}/${conversationId}/pin`)
+  },
+
+  unpinConversation: async (userId: string, conversationId: string): Promise<void> => {
+    await api.delete(`/api/chat/conversations/${userId}/${conversationId}/pin`)
   },
 }
 

@@ -6,8 +6,8 @@ When deploying to **Vercel** (or any host), set these in **Project → Settings 
 
 | Variable | Description |
 |----------|-------------|
-| `SUPABASE_URL` | Your Supabase project URL |
-| `SUPABASE_KEY` | Supabase anon/service key (with access to `users`, `conversations`, etc.) |
+| `SUPABASE_URL` | Your Supabase project URL (Dashboard → Project Settings → API) |
+| `SUPABASE_KEY` | **Supabase API key**: use **anon (public)** or **service_role** from Dashboard → Project Settings → API. Copy the value exactly (no extra spaces). If you get "Invalid API key" (401), paste the other key. |
 | `GEMINI_API_KEY` or `GEMINI_API_KEYS` | Google Gemini API key(s). Use `GEMINI_API_KEYS` for comma-separated multiple keys. |
 
 After adding or changing environment variables on Vercel, **redeploy** the project for them to take effect.

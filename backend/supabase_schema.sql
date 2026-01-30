@@ -40,6 +40,14 @@ CREATE TABLE IF NOT EXISTS user_journals (
     tags TEXT[] DEFAULT ARRAY[]::TEXT[]
 );
 
+-- Pinned conversations table (for pin state per user)
+CREATE TABLE IF NOT EXISTS pinned_conversations (
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    conversation_id TEXT NOT NULL,
+    pinned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    PRIMARY KEY (user_id, conversation_id)
+);
+
 -- AI journals table
 CREATE TABLE IF NOT EXISTS ai_journals (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -61,6 +69,7 @@ CREATE INDEX IF NOT EXISTS idx_user_journals_user_id ON user_journals(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_journals_created_at ON user_journals(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_journals_user_id ON ai_journals(user_id);
 CREATE INDEX IF NOT EXISTS idx_ai_journals_created_at ON ai_journals(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pinned_conversations_user_id ON pinned_conversations(user_id);
 
 -- Enable Row Level Security (RLS) - Optional but recommended
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -68,6 +77,7 @@ ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE memories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_journals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_journals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pinned_conversations ENABLE ROW LEVEL SECURITY;
 
 -- Basic RLS policies (adjust based on your auth setup)
 -- For now, allow all operations - you should restrict based on user_id matching authenticated user
@@ -75,6 +85,7 @@ CREATE POLICY "Users can view own data" ON users FOR SELECT USING (true);
 CREATE POLICY "Users can insert own data" ON users FOR INSERT WITH CHECK (true);
 CREATE POLICY "Users can view own conversations" ON conversations FOR SELECT USING (true);
 CREATE POLICY "Users can insert own conversations" ON conversations FOR INSERT WITH CHECK (true);
+CREATE POLICY "Users can delete own conversations" ON conversations FOR DELETE USING (true);
 CREATE POLICY "Users can view own memories" ON memories FOR SELECT USING (true);
 CREATE POLICY "Users can insert own memories" ON memories FOR INSERT WITH CHECK (true);
 CREATE POLICY "Users can delete own memories" ON memories FOR DELETE USING (true);
@@ -84,3 +95,7 @@ CREATE POLICY "Users can update own journals" ON user_journals FOR UPDATE USING 
 CREATE POLICY "Users can delete own journals" ON user_journals FOR DELETE USING (true);
 CREATE POLICY "Users can view own AI journals" ON ai_journals FOR SELECT USING (true);
 CREATE POLICY "AI can insert journals" ON ai_journals FOR INSERT WITH CHECK (true);
+CREATE POLICY "Users can view own pinned" ON pinned_conversations FOR SELECT USING (true);
+CREATE POLICY "Users can insert own pinned" ON pinned_conversations FOR INSERT WITH CHECK (true);
+CREATE POLICY "Users can update own pinned" ON pinned_conversations FOR UPDATE USING (true);
+CREATE POLICY "Users can delete own pinned" ON pinned_conversations FOR DELETE USING (true);

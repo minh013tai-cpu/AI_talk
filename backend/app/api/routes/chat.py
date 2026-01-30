@@ -156,7 +156,7 @@ async def get_conversation_history(user_id: str, conversation_id: Optional[str] 
 
 @router.get("/conversations/{user_id}")
 async def get_conversations(user_id: str):
-    """Get list of all conversations for a user, grouped by conversation_id"""
+    """Get list of all conversations for a user, grouped by conversation_id, with pinned status"""
     try:
         supabase = get_supabase_client()
         result = supabase.table("conversations")\
@@ -167,6 +167,13 @@ async def get_conversations(user_id: str):
         
         if not result.data:
             return []
+        
+        # Fetch pinned conversations for this user
+        pinned_result = supabase.table("pinned_conversations")\
+            .select("conversation_id")\
+            .eq("user_id", user_id)\
+            .execute()
+        pinned_ids = {r["conversation_id"] for r in (pinned_result.data or [])}
         
         conversations_dict = {}
         for conv in result.data:
@@ -179,7 +186,8 @@ async def get_conversations(user_id: str):
                     "conversation_id": conv_id,
                     "first_message": conv.get("message", "")[:50] + "..." if len(conv.get("message", "")) > 50 else conv.get("message", ""),
                     "last_message_time": conv.get("timestamp"),
-                    "message_count": 0
+                    "message_count": 0,
+                    "pinned": conv_id in pinned_ids
                 }
             
             conversations_dict[conv_id]["message_count"] += 1
@@ -188,11 +196,93 @@ async def get_conversations(user_id: str):
                 conversations_dict[conv_id]["first_message"] = conv.get("message", "")[:50] + "..." if len(conv.get("message", "")) > 50 else conv.get("message", "")
         
         conversations_list = list(conversations_dict.values())
-        conversations_list.sort(key=lambda x: x["last_message_time"], reverse=True)
         
+        def _sort_key(x):
+            pinned = 0 if x.get("pinned") else 1
+            ts = x.get("last_message_time") or ""
+            try:
+                ts_val = datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp()
+            except (ValueError, TypeError):
+                ts_val = 0
+            return (pinned, -ts_val)
+        
+        conversations_list.sort(key=_sort_key)
         return conversations_list
     except Exception as e:
         logger.exception("get_conversations error: %s", e)
+        detail = str(e)
+        if not _is_production():
+            detail = f"{detail} | traceback: {traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=detail)
+
+
+@router.delete("/conversations/{user_id}/{conversation_id}")
+async def delete_conversation(user_id: str, conversation_id: str):
+    """Delete a conversation and all its messages from Supabase"""
+    try:
+        supabase = get_supabase_client()
+        result = supabase.table("conversations")\
+            .select("id, metadata")\
+            .eq("user_id", user_id)\
+            .execute()
+        
+        rows = result.data or []
+        ids_to_delete = [
+            r["id"] for r in rows
+            if (r.get("metadata") or {}).get("conversation_id") == conversation_id
+        ]
+        
+        if ids_to_delete:
+            for row_id in ids_to_delete:
+                supabase.table("conversations").delete().eq("id", row_id).execute()
+        
+        # Remove from pinned_conversations if present
+        supabase.table("pinned_conversations")\
+            .delete()\
+            .eq("user_id", user_id)\
+            .eq("conversation_id", conversation_id)\
+            .execute()
+        
+        return {"ok": True, "deleted": len(ids_to_delete)}
+    except Exception as e:
+        logger.exception("delete_conversation error: %s", e)
+        detail = str(e)
+        if not _is_production():
+            detail = f"{detail} | traceback: {traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=detail)
+
+
+@router.post("/conversations/{user_id}/{conversation_id}/pin")
+async def pin_conversation(user_id: str, conversation_id: str):
+    """Pin a conversation"""
+    try:
+        supabase = get_supabase_client()
+        supabase.table("pinned_conversations").upsert(
+            {"user_id": user_id, "conversation_id": conversation_id, "pinned_at": datetime.now().isoformat()},
+            on_conflict="user_id,conversation_id"
+        ).execute()
+        return {"ok": True, "pinned": True}
+    except Exception as e:
+        logger.exception("pin_conversation error: %s", e)
+        detail = str(e)
+        if not _is_production():
+            detail = f"{detail} | traceback: {traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=detail)
+
+
+@router.delete("/conversations/{user_id}/{conversation_id}/pin")
+async def unpin_conversation(user_id: str, conversation_id: str):
+    """Unpin a conversation"""
+    try:
+        supabase = get_supabase_client()
+        supabase.table("pinned_conversations")\
+            .delete()\
+            .eq("user_id", user_id)\
+            .eq("conversation_id", conversation_id)\
+            .execute()
+        return {"ok": True, "pinned": False}
+    except Exception as e:
+        logger.exception("unpin_conversation error: %s", e)
         detail = str(e)
         if not _is_production():
             detail = f"{detail} | traceback: {traceback.format_exc()}"

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { chatAPI, ConversationSummary } from '../../services/api'
 import './ConversationList.css'
 
@@ -19,6 +19,8 @@ const ConversationList = ({
 }: ConversationListProps) => {
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     loadConversations()
@@ -29,6 +31,18 @@ const ConversationList = ({
       loadConversations()
     }
   }, [currentConversationId])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null)
+      }
+    }
+    if (openMenuId) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [openMenuId])
 
   const safeConversations = Array.isArray(conversations) ? conversations : []
 
@@ -42,6 +56,35 @@ const ConversationList = ({
       setConversations([])
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleTogglePin = async (e: React.MouseEvent, conv: ConversationSummary) => {
+    e.stopPropagation()
+    setOpenMenuId(null)
+    try {
+      if (conv.pinned) {
+        await chatAPI.unpinConversation(userId, conv.conversation_id)
+      } else {
+        await chatAPI.pinConversation(userId, conv.conversation_id)
+      }
+      await loadConversations()
+    } catch (err) {
+      console.error('Failed to toggle pin:', err)
+    }
+  }
+
+  const handleDelete = async (e: React.MouseEvent, conv: ConversationSummary) => {
+    e.stopPropagation()
+    setOpenMenuId(null)
+    try {
+      await chatAPI.deleteConversation(userId, conv.conversation_id)
+      if (currentConversationId === conv.conversation_id) {
+        onSelectConversation(undefined)
+      }
+      await loadConversations()
+    } catch (err) {
+      console.error('Failed to delete conversation:', err)
     }
   }
 
@@ -100,16 +143,51 @@ const ConversationList = ({
               onClick={() => onSelectConversation(conv.conversation_id)}
             >
               <span className="conversation-item-title">{conv.first_message || 'Cuộc trò chuyện mới'}</span>
-              <button
-                type="button"
-                className="conversation-item-pin"
-                aria-label="Ghim"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2v6l4 4v6h-2v-6l-2-2-2 2v6H8v-6l4-4V2z" />
-                </svg>
-              </button>
+              <div className="conversation-item-actions" ref={openMenuId === conv.conversation_id ? menuRef : null}>
+                <button
+                  type="button"
+                  className="conversation-item-menu-btn"
+                  aria-label="Menu"
+                  aria-expanded={openMenuId === conv.conversation_id}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setOpenMenuId(openMenuId === conv.conversation_id ? null : conv.conversation_id)
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="6" r="1.5" />
+                    <circle cx="12" cy="12" r="1.5" />
+                    <circle cx="12" cy="18" r="1.5" />
+                  </svg>
+                </button>
+                {openMenuId === conv.conversation_id && (
+                  <div className="conversation-dropdown" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      className="conversation-dropdown-item"
+                      onClick={(e) => handleTogglePin(e, conv)}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 2v6l4 4v6h-2v-6l-2-2-2 2v6H8v-6l4-4V2z" />
+                      </svg>
+                      <span>{conv.pinned ? 'Bỏ ghim' : 'Ghim'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="conversation-dropdown-item conversation-dropdown-item-danger"
+                      onClick={(e) => handleDelete(e, conv)}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        <line x1="10" y1="11" x2="10" y2="17" />
+                        <line x1="14" y1="11" x2="14" y2="17" />
+                      </svg>
+                      <span>Xoá</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ))
         )}

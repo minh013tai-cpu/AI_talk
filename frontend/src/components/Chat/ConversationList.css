@@ -96,6 +96,7 @@
   transition: background-color 0.2s;
   border-radius: 0 12px 12px 0;
   margin-right: 0.5rem;
+  position: relative;
 }
 
 .conversation-item:hover {
@@ -121,7 +122,12 @@
   font-weight: 600;
 }
 
-.conversation-item-pin {
+.conversation-item-actions {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.conversation-item-menu-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -132,17 +138,61 @@
   color: #5f6368;
   cursor: pointer;
   border-radius: 50%;
-  flex-shrink: 0;
   opacity: 0.7;
   transition: opacity 0.2s, background 0.2s;
 }
 
-.conversation-item:hover .conversation-item-pin {
+.conversation-item:hover .conversation-item-menu-btn {
   opacity: 1;
 }
 
-.conversation-item-pin:hover {
+.conversation-item-menu-btn:hover {
   background: rgba(0, 0, 0, 0.08);
+}
+
+.conversation-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.conversation-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: none;
+  background: transparent;
+  color: #1a1a1a;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.conversation-dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.conversation-dropdown-item svg {
+  flex-shrink: 0;
+}
+
+.conversation-dropdown-item-danger {
+  color: #d93025;
+}
+
+.conversation-dropdown-item-danger:hover {
+  background: rgba(217, 48, 37, 0.08);
 }
 
 @media (max-width: 768px) {
