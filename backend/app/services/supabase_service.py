@@ -19,6 +19,11 @@ def get_supabase_client() -> Client:
     return _supabase_client
 
 
+# Demo user ID used by frontend; use a fixed short username to avoid long/duplicate issues
+DEMO_USER_ID = "00000000-0000-0000-0000-000000000000"
+DEMO_USERNAME = "demo_user"
+
+
 def ensure_user_exists(user_id: str) -> bool:
     """
     Ensure a user exists in the users table. Create if not exists.
@@ -35,9 +40,11 @@ def ensure_user_exists(user_id: str) -> bool:
             return True
         
         # User doesn't exist, create it
-        # Use user_id (without hyphens) as username to ensure uniqueness
-        # UUIDs are extremely unlikely to collide
-        username = f"user_{user_id.replace('-', '')}"
+        if user_id == DEMO_USER_ID:
+            username = DEMO_USERNAME
+        else:
+            # Use user_id (without hyphens) as username to ensure uniqueness
+            username = f"user_{user_id.replace('-', '')}"
         
         user_data = {
             "id": user_id,

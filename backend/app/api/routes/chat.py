@@ -8,7 +8,15 @@ from app.services.journal_service import get_journal_service
 from app.services.supabase_service import get_supabase_client
 from app.utils.prompt_builder import TYMON_SYSTEM_PROMPT
 from datetime import datetime
+import logging
+import os
+import traceback
 import uuid
+
+logger = logging.getLogger(__name__)
+
+def _is_production() -> bool:
+    return os.getenv("VERCEL_ENV") == "production" or os.getenv("ENVIRONMENT") == "production"
 
 router = APIRouter()
 
@@ -37,24 +45,23 @@ async def chat(message_data: ChatMessage):
         memories = memory_service.get_relevant_memories(user_id, user_message, limit=5)
         memory_texts = [mem.content for mem in memories]
         
-        # Get conversation history for this specific conversation
+        # Get conversation history for this specific conversation (filter in Python to avoid JSONB filter syntax issues)
         history_query = supabase.table("conversations")\
-            .select("message, response")\
-            .eq("user_id", user_id)
-        
-        if conversation_id:
-            history_query = history_query.eq("metadata->>conversation_id", conversation_id)
-        
-        history_result = history_query\
+            .select("message, response, timestamp, metadata")\
+            .eq("user_id", user_id)\
             .order("timestamp", desc=False)\
-            .limit(10)\
-            .execute()
+            .limit(100)
+        history_result = history_query.execute()
+        
+        rows = history_result.data or []
+        if conversation_id:
+            rows = [r for r in rows if (r.get("metadata") or {}).get("conversation_id") == conversation_id]
+        rows = rows[-10:]
         
         conversation_history = []
-        if history_result.data:
-            for conv in reversed(history_result.data):
-                conversation_history.append({"role": "user", "content": conv["message"]})
-                conversation_history.append({"role": "assistant", "content": conv["response"]})
+        for conv in rows:
+            conversation_history.append({"role": "user", "content": conv["message"]})
+            conversation_history.append({"role": "assistant", "content": conv["response"]})
         
         # Generate response from Gemini
         ai_response = gemini.generate_response(
@@ -117,7 +124,11 @@ async def chat(message_data: ChatMessage):
         )
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Chat POST error: %s", e)
+        detail = str(e)
+        if not _is_production():
+            detail = f"{detail} | traceback: {traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=detail)
 
 
 @router.get("/history/{user_id}")
@@ -127,19 +138,20 @@ async def get_conversation_history(user_id: str, conversation_id: Optional[str] 
         supabase = get_supabase_client()
         query = supabase.table("conversations")\
             .select("*")\
-            .eq("user_id", user_id)
-        
-        if conversation_id:
-            query = query.eq("metadata->>conversation_id", conversation_id)
-        
-        result = query\
+            .eq("user_id", user_id)\
             .order("timestamp", desc=False)\
-            .limit(limit)\
-            .execute()
-        
-        return result.data or []
+            .limit(limit * 3 if conversation_id else limit)
+        result = query.execute()
+        data = result.data or []
+        if conversation_id:
+            data = [r for r in data if (r.get("metadata") or {}).get("conversation_id") == conversation_id][:limit]
+        return data
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("get_conversation_history error: %s", e)
+        detail = str(e)
+        if not _is_production():
+            detail = f"{detail} | traceback: {traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=detail)
 
 
 @router.get("/conversations/{user_id}")
@@ -180,4 +192,8 @@ async def get_conversations(user_id: str):
         
         return conversations_list
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("get_conversations error: %s", e)
+        detail = str(e)
+        if not _is_production():
+            detail = f"{detail} | traceback: {traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=detail)
