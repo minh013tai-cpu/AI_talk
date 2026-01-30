@@ -30,13 +30,16 @@ const ConversationList = ({
     }
   }, [currentConversationId])
 
+  const safeConversations = Array.isArray(conversations) ? conversations : []
+
   const loadConversations = async () => {
     setIsLoading(true)
     try {
       const data = await chatAPI.getConversations(userId)
-      setConversations(data)
+      setConversations(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to load conversations:', error)
+      setConversations([])
     } finally {
       setIsLoading(false)
     }
@@ -85,10 +88,10 @@ const ConversationList = ({
       <div className="conversation-list-content">
         {isLoading ? (
           <div className="conversation-loading">Đang tải...</div>
-        ) : conversations.length === 0 ? (
+        ) : safeConversations.length === 0 ? (
           <div className="conversation-empty">Chưa có cuộc trò chuyện nào</div>
         ) : (
-          conversations.map((conv) => (
+          safeConversations.map((conv) => (
             <div
               key={conv.conversation_id}
               className={`conversation-item ${

@@ -83,7 +83,8 @@ export const chatAPI = {
   
   getConversations: async (userId: string): Promise<ConversationSummary[]> => {
     const response = await api.get<ConversationSummary[]>(`/api/chat/conversations/${userId}`)
-    return response.data
+    const data = response.data
+    return Array.isArray(data) ? data : []
   },
 }
 
