@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { chatAPI, ConversationSummary } from '../../services/api'
 import './ConversationList.css'
 
@@ -8,6 +9,11 @@ interface ConversationListProps {
   onSelectConversation: (conversationId: string | undefined) => void
   onNewConversation: () => void
   onMenuClick?: () => void
+}
+
+interface MenuPosition {
+  top: number
+  left: number
 }
 
 const ConversationList = ({
@@ -20,7 +26,7 @@ const ConversationList = ({
   const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null)
 
   useEffect(() => {
     loadConversations()
@@ -34,9 +40,12 @@ const ConversationList = ({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpenMenuId(null)
+      const target = e.target as HTMLElement
+      if (target.closest('[data-conversation-menu]') || target.closest('[data-conversation-dropdown]')) {
+        return
       }
+      setOpenMenuId(null)
+      setMenuPosition(null)
     }
     if (openMenuId) {
       document.addEventListener('mousedown', handleClickOutside)
@@ -62,6 +71,7 @@ const ConversationList = ({
   const handleTogglePin = async (e: React.MouseEvent, conv: ConversationSummary) => {
     e.stopPropagation()
     setOpenMenuId(null)
+    setMenuPosition(null)
     try {
       if (conv.pinned) {
         await chatAPI.unpinConversation(userId, conv.conversation_id)
@@ -77,6 +87,7 @@ const ConversationList = ({
   const handleDelete = async (e: React.MouseEvent, conv: ConversationSummary) => {
     e.stopPropagation()
     setOpenMenuId(null)
+    setMenuPosition(null)
     try {
       await chatAPI.deleteConversation(userId, conv.conversation_id)
       if (currentConversationId === conv.conversation_id) {
@@ -142,18 +153,33 @@ const ConversationList = ({
               }`}
               onClick={() => onSelectConversation(conv.conversation_id)}
             >
+              {conv.pinned && (
+                <span className="conversation-item-pinned-icon" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2v6l4 4v6h-2v-6l-2-2-2 2v6H8v-6l4-4V2z" />
+                  </svg>
+                </span>
+              )}
               <span className="conversation-item-title">{conv.first_message || 'Cuộc trò chuyện mới'}</span>
-              <div className="conversation-item-actions" ref={openMenuId === conv.conversation_id ? menuRef : null}>
+              <div className="conversation-item-actions">
                 <button
                   type="button"
                   className="conversation-item-menu-btn"
+                  data-conversation-menu
                   aria-label="Tùy chọn"
                   aria-haspopup="menu"
                   aria-expanded={openMenuId === conv.conversation_id}
-                  onMouseDown={(e) => {
+                  onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    setOpenMenuId((prev) => (prev === conv.conversation_id ? null : conv.conversation_id))
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                    if (openMenuId === conv.conversation_id) {
+                      setOpenMenuId(null)
+                      setMenuPosition(null)
+                    } else {
+                      setOpenMenuId(conv.conversation_id)
+                      setMenuPosition({ top: rect.top, left: rect.right + 4 })
+                    }
                   }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -162,38 +188,49 @@ const ConversationList = ({
                     <circle cx="12" cy="19" r="2" />
                   </svg>
                 </button>
-                {openMenuId === conv.conversation_id && (
-                  <div className="conversation-dropdown" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
-                      className="conversation-dropdown-item"
-                      onClick={(e) => handleTogglePin(e, conv)}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M12 2v6l4 4v6h-2v-6l-2-2-2 2v6H8v-6l4-4V2z" />
-                      </svg>
-                      <span>{conv.pinned ? 'Bỏ ghim' : 'Ghim'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="conversation-dropdown-item conversation-dropdown-item-danger"
-                      onClick={(e) => handleDelete(e, conv)}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        <line x1="10" y1="11" x2="10" y2="17" />
-                        <line x1="14" y1="11" x2="14" y2="17" />
-                      </svg>
-                      <span>Xoá</span>
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           ))
         )}
       </div>
+
+      {openMenuId && menuPosition && (() => {
+        const conv = safeConversations.find((c) => c.conversation_id === openMenuId)
+        if (!conv) return null
+        return createPortal(
+          <div
+            className="conversation-dropdown conversation-dropdown-portal"
+            data-conversation-dropdown
+            style={{ top: menuPosition.top, left: menuPosition.left }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="conversation-dropdown-item"
+              onClick={(e) => handleTogglePin(e, conv)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2v6l4 4v6h-2v-6l-2-2-2 2v6H8v-6l4-4V2z" />
+              </svg>
+              <span>{conv.pinned ? 'Bỏ ghim' : 'Ghim'}</span>
+            </button>
+            <button
+              type="button"
+              className="conversation-dropdown-item conversation-dropdown-item-danger"
+              onClick={(e) => handleDelete(e, conv)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
+              <span>Xoá</span>
+            </button>
+          </div>,
+          document.body
+        )
+      })()}
     </div>
   )
 }
